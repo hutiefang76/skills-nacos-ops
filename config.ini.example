@@ -1,0 +1,18 @@
+[nacos]
+addr = HOST:PORT
+username = nacos
+password = PASSWORD
+
+[environments]
+# name = nacos_namespace
+local = local
+uat = uat
+prod = prod
+
+[defaults]
+data_id = realtime-job.yaml
+group = MAGNOLIA_GROUP
+
+[project]
+# realtime-job 项目根目录，用于 diff 命令定位 config-examples/
+path = /c/Users/Administrator/IdeaProjects/realtime-job
