@@ -27,7 +27,12 @@ def resolve_namespace(ini, env):
         avail = ", ".join(ini.options("environments"))
         print(f"[ERROR] Unknown env '{env}'. Available: {avail}", file=sys.stderr)
         sys.exit(1)
-    return ini.get("environments", env)
+    ns = ini.get("environments", env).strip()
+    # Nacos 2.x: namespace 'public' 是默认 namespace 的别名, 实际 ID 是空字符串.
+    # 用户配 'local = public' 时自动转 '', 保证 GET / POST 命中同一条记录.
+    if ns.lower() == "public":
+        return ""
+    return ns
 
 
 def _auth_params(ini):
@@ -157,9 +162,19 @@ def cmd_push(args, ini):
     nacos_publish(ini, namespace, data_id, group, content)
     print("[OK] Published")
 
-    verify = nacos_get_strict(ini, namespace, data_id, group)
-    if verify.strip() == content.strip():
-        print("[OK] Verified — remote matches local")
+    # Verify with retry (Nacos write 后小延迟才能读到, ~100ms)
+    import time
+    verify = None
+    for attempt in range(5):
+        verify = nacos_get(ini, namespace, data_id, group)
+        if verify is not None and verify.strip() == content.strip():
+            print("[OK] Verified — remote matches local")
+            return
+        if attempt < 4:
+            time.sleep(0.2 * (attempt + 1))  # 0.2s, 0.4s, 0.6s, 0.8s
+    if verify is None:
+        print("[WARN] Push succeeded but verify GET timed out after 2s "
+              "(known Nacos write-read lag, data should be present)", file=sys.stderr)
     else:
         print("[WARN] Remote content differs from pushed content", file=sys.stderr)
 
