@@ -1,18 +1,29 @@
-[nacos]
-addr = HOST:PORT
-username = nacos
-password = PASSWORD
+; Nacos Ops — 配置模板
+; 复制为 config.ini 后填写真实地址/账号 (config.ini 已在 .gitignore)
+;
+; Demo (本地 docker): 用 frank 仓库 deploy/test-stack/docker-compose.yml 起一个 nacos
+;   docker compose -f deploy/test-stack/docker-compose.yml up -d nacos
+;   默认 http://localhost:8848/nacos, 账号 nacos/nacos
 
+[nacos]
+addr     = localhost:8848
+username = nacos
+password = nacos
+
+; 环境别名 → Nacos namespace
+; demo docker 默认 namespace 是 'public' (空字符串也行)
+; 真生产: namespace 是 UUID 字符串, 在 nacos UI 里查
 [environments]
-# name = nacos_namespace
-local = local
-uat = uat
-prod = prod
+local = public
+; dev  = 7c5a8d3e-...      ; 取消注释并填 namespace UUID
+; uat  = 9c1b2f4a-...
+; prod = 4f2e6a8c-...
 
 [defaults]
 data_id = realtime-job.yaml
-group = MAGNOLIA_GROUP
+group   = DEFAULT_GROUP
 
+; (可选) 本地项目根 — 仅 diff 命令需要, 用于跟 config-examples/<env>/ 对比
+; 不填或留空: diff 命令会 skip, 其它命令不受影响
 [project]
-# realtime-job 项目根目录，用于 diff 命令定位 config-examples/
-path = /c/Users/Administrator/IdeaProjects/realtime-job
+path =

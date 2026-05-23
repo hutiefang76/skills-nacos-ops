@@ -168,7 +168,14 @@ def cmd_diff(args, ini):
     namespace = resolve_namespace(ini, args.env)
     data_id, group = _defaults(args, ini)
 
-    project_path = ini.get("project", "path")
+    project_path = ini.get("project", "path", fallback="").strip()
+    if not project_path:
+        print("[SKIP] `diff` command needs [project].path in config.ini "
+              "(your local project root containing config-examples/<env>/nacos.yaml).",
+              file=sys.stderr)
+        print("       For two-Nacos-environments comparison use `cross-diff` instead.",
+              file=sys.stderr)
+        sys.exit(0)  # skip 不算错
     local_file = os.path.join(project_path, "config-examples", args.env, "nacos.yaml")
     if not os.path.exists(local_file):
         print(f"[ERROR] Local config not found: {local_file}", file=sys.stderr)
